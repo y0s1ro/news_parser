@@ -193,6 +193,9 @@ async def approve_post(client, post_id):
         if media_paths and all(os.path.exists(p) for p in media_paths):
             await client.send_file(TARGET_CHANNEL, media_paths, caption=post['text'][:1024],attributes=[
                 DocumentAttributeVideo(
+                    duration=120,
+                    w=1280,
+                    h=720,
                     supports_streaming=True
                 )
             ], force_document=False)
