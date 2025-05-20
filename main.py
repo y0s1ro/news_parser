@@ -7,8 +7,8 @@ import os
 import uuid
 from telethon.sync import TelegramClient
 from telethon import functions
-from telethon.tl.types import DocumentAttributeVideo
 from dotenv import load_dotenv
+from telethon.tl.types import DocumentAttributeVideo
 
 # Configure Gemini
 load_dotenv()
@@ -191,36 +191,11 @@ async def approve_post(client, post_id):
         media_paths = post['media_path'] if isinstance(post['media_path'], list) else [post['media_path']]
 
         if media_paths and all(os.path.exists(p) for p in media_paths):
-            for path in media_paths:
-                if path.lower().endswith(('.mp4', '.mov', '.mkv')):
-                    # Get video metadata (requires ffmpeg-python or similar)
-                    # Example hardcoded values - replace with actual detection
-                    duration = 60  # in seconds
-                    width, height = 1280, 720  # dimensions
-
-                    await client.send_file(
-                        TARGET_CHANNEL,
-                        path,
-                        caption=post['text'][:1024],
-                        supports_streaming=True,
-                        attributes=[
-                            DocumentAttributeVideo(
-                                duration=duration,
-                                w=width,
-                                h=height,
-                                supports_streaming=True
-                            )
-                        ],
-                        force_document=False,  # Critical for previews
-                        thumb='thumb.jpg' if os.path.exists('thumb.jpg') else None
-                    )
-                else:
-                    # Regular media (photos, docs)
-                    await client.send_file(
-                        TARGET_CHANNEL,
-                        path,
-                        caption=post['text'][:1024]
-                    )
+            await client.send_file(TARGET_CHANNEL, media_paths, caption=post['text'][:1024],attributes=[
+                DocumentAttributeVideo(
+                    supports_streaming=True
+                )
+            ], force_document=False)
         else:
             await client.send_message(TARGET_CHANNEL, post['text'])
 
