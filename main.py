@@ -7,14 +7,15 @@ import os
 import uuid
 from telethon.sync import TelegramClient
 from telethon import functions
+from dotenv import load_dotenv
 
 # Configure Gemini
-genai.configure(api_key="AIzaSyAkGwK-Kj68EleuXujvzb9wbJFzBuSViY8")
-
+load_dotenv()
+genai.configure(api_key=os.getenv("api_key"))
 # Your API credentials
-api_id = '28529438'
-api_hash = '8cd75c17efbe124b971b0dd77e8817f5'
-phone = '+380937602624'
+api_id = os.getenv("api_id")
+api_hash = os.getenv("api_hash")
+phone = os.getenv("phone")
 processed_albums = set()
 SOURCE_CHANNELS = []
 # Dynamically get channels from folder "новости"
