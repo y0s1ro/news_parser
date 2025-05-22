@@ -195,8 +195,8 @@ async def approve_post(client, post_id):
         wait_time = r.uniform(4, 6)
         global SCHEDULED_TIME
         if SCHEDULED_TIME == 0:
-            send_time = datetime.now() + timedelta(minutes=wait_time) - timedelta(hours=2)
-        elif SCHEDULED_TIME == None or SCHEDULED_TIME < (datetime.now() - timedelta(hours=2)):
+            send_time = datetime.now() + timedelta(minutes=wait_time)
+        elif SCHEDULED_TIME == None or SCHEDULED_TIME < datetime.now():
             send_time = None
         else:
             send_time = SCHEDULED_TIME + timedelta(minutes=wait_time)
