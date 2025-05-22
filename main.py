@@ -31,7 +31,7 @@ for channel in req.to_dict()["filters"][1]['include_peers']:
     print(channel['channel_id'])
 REVIEWER_ID = 536196537  # Your personal account ID
 REVIEW_CHANNEL = 'https://t.me/+d0YweaWtS8wxYTli'
-TARGET_CHANNEL = 'test'
+TARGET_CHANNEL = 'FlazyNews'
 
 # Database setup
 def init_db():
