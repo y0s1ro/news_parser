@@ -9,6 +9,8 @@ from telethon.sync import TelegramClient
 from telethon import functions
 from dotenv import load_dotenv
 from telethon.tl.types import DocumentAttributeVideo
+from datetime import datetime, timedelta
+import random as r
 
 # Configure Gemini
 load_dotenv()
@@ -19,6 +21,7 @@ api_hash = os.getenv("api_hash")
 phone = os.getenv("phone")
 processed_albums = set()
 SOURCE_CHANNELS = []
+SCHEDULED_TIME = None  # seconds
 # Dynamically get channels from folder "новости"
 with TelegramClient('get_channels', api_id, api_hash) as client:
     req = client(functions.messages.GetDialogFiltersRequest())
@@ -28,7 +31,7 @@ for channel in req.to_dict()["filters"][1]['include_peers']:
     print(channel['channel_id'])
 REVIEWER_ID = 536196537  # Your personal account ID
 REVIEW_CHANNEL = 'https://t.me/+d0YweaWtS8wxYTli'
-TARGET_CHANNEL = 'FlazyNews'
+TARGET_CHANNEL = 'test'
 
 # Database setup
 def init_db():
@@ -189,7 +192,15 @@ async def approve_post(client, post_id):
     try:
         post = pending_posts[post_id]
         media_paths = post['media_path'] if isinstance(post['media_path'], list) else [post['media_path']]
-
+        wait_time = r.uniform(4, 6)
+        global SCHEDULED_TIME
+        if SCHEDULED_TIME == 0:
+            send_time = datetime.now() + timedelta(minutes=wait_time) - timedelta(hours=2)
+        elif SCHEDULED_TIME == None or SCHEDULED_TIME < (datetime.now() - timedelta(hours=2)):
+            send_time = None
+        else:
+            send_time = SCHEDULED_TIME + timedelta(minutes=wait_time)
+        SCHEDULED_TIME = send_time if send_time != None else 0
         if media_paths and all(os.path.exists(p) for p in media_paths):
             await client.send_file(TARGET_CHANNEL, media_paths, caption=post['text'][:1024],attributes=[
                 DocumentAttributeVideo(
@@ -198,10 +209,11 @@ async def approve_post(client, post_id):
                     h=720,
                     supports_streaming=True
                 )
-            ], force_document=False)
+            ], force_document=False, schedule = send_time)
+            print(SCHEDULED_TIME)
         else:
-            await client.send_message(TARGET_CHANNEL, post['text'])
-
+            await client.send_message(TARGET_CHANNEL, post['text'], schedule = send_time)
+        print(SCHEDULED_TIME)
         pending_posts[post_id]['status'] = 'approved'
         c = db_conn.cursor()
         c.execute("UPDATE posts SET status=? WHERE id=?", ('approved', post_id))
