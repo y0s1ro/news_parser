@@ -30,7 +30,7 @@ for channel in req.to_dict()["filters"][1]['include_peers']:
     SOURCE_CHANNELS.append(channel['channel_id'])
     print(channel['channel_id'])
 REVIEWER_ID = 536196537  # Your personal account ID
-REVIEW_CHANNEL = 'https://t.me/+d0YweaWtS8wxYTli'
+REVIEW_CHANNEL = 'https://t.me/+VLvdO3NedKQwZTIy'
 TARGET_CHANNEL = 'FlazyNews'
 
 # Database setup
@@ -149,7 +149,7 @@ async def send_for_approval(client, event, text, media, is_first_message=True):
             'text': text,
             'media_path': media_paths,
             'status': 'pending',
-            'messages': []
+            'message_id': []
         }
 
         #reviewer = await client.get_input_entity(REVIEWER_ID)
@@ -174,7 +174,7 @@ async def send_for_approval(client, event, text, media, is_first_message=True):
             reply_to=text_msg.id
         )
         messages.append(cmd_msg.id)
-
+        pending_posts[post_id]['message_id'] = media_msg.id
         c = db_conn.cursor()
         c.execute("INSERT INTO posts VALUES (?,?,?,?,?)",
                  (post_id, text, ';'.join(media_paths), 'pending', ','.join(map(str, messages))))
@@ -296,6 +296,19 @@ async def handle_edit_command(client, event):
     except Exception as e:
         await event.reply(f"❌ Error: {str(e)}")
 
+async def handle_pending_posts_command(client, event):
+    try:
+        if not pending_posts:
+            await event.reply("❌ No pending posts.")
+            return
+        response = "Pending posts:\n"
+        for post_id, post in pending_posts.items():
+            if post['status'] == 'pending':
+                response += f"ID: [{post_id}](https://t.me/c/2665264517/{pending_posts[post_id]['message_id']}), Status: {post['status']}\n"
+        await event.reply(response)
+    except Exception as e:
+        await event.reply(f"❌ Error: {str(e)}")
+
 async def main():
     client = TelegramClient('parser', api_id, api_hash)
 
@@ -358,8 +371,7 @@ async def main():
                 await handle_edit_command(client, event)
             elif event.text.startswith('/pending_posts'):
                 print("Handling pending posts command...")
-                pending_posts_list = "\n".join([f"`{post_id}`: {post['text'][:50]}..." for post_id, post in pending_posts.items() if post['status'] == 'pending']) #TODO: update on server
-                await event.reply(f"Pending posts:\n{pending_posts_list}")
+                await handle_pending_posts_command(client, event)
         except Exception as e:
             print(f"Error handling approval command: {e}")
 
